@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>VPN Admin Portal</title>
+</head>
+
+<body>
+    <h2>🛡 Admin Dashboard</h2>
+
+    <h3>📋 Sign Client Certificate</h3>
+    <form method="POST" action="/admin/sign">
+        <input type="text" name="common_name" placeholder="Client name (CN)" required>
+        <button type="submit">Sign CSR</button>
+    </form>
+
+    <h3>📡 View Connected Clients</h3>
+    <form method="GET" action="/admin/clients">
+        <button type="submit">Refresh Connected Clients</button>
+    </form>
+    {% if clients %}
+    <ul>
+        {% for client in clients %}
+        <li>{{ client }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <ul>
+        {% for category, message in messages %}
+        <li><strong>{{ category.title() }}:</strong> {{ message }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+    {% endwith %}
+
+    <h3>❌ Revoke Client Certificate</h3>
+    <form method="POST" action="/admin/revoke">
+        <input type="text" name="common_name" placeholder="Client name (CN)" required>
+        <button type="submit">Revoke</button>
+    </form>
+
+    <!-- <h3>📦 Generate .ovpn File</h3>
+    <form method="GET" action="/admin/generate-ovpn">
+        <input type="text" name="common_name" placeholder="Client name (CN)" required>
+        <button formaction="/admin/generate-ovpn/" formmethod="GET"
+            onclick="this.form.action += this.form.common_name.value;">Download .ovpn</button>
+    </form> -->
+    <h3>📥 Pending Certificate Requests</h3>
+    <form method="GET" action="/admin/pending">
+        <button type="submit">Refresh Pending CSRs</button>
+    </form>
+    
+    {% if pending_clients %}
+    <ul>
+        {% for client in pending_clients %}
+        <li>{{ client }}
+            <form method="POST" action="/admin/sign" style="display:inline;">
+                <input type="hidden" name="common_name" value="{{ client }}">
+                <button type="submit">Sign</button>
+            </form>
+        </li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+
+    <h3>❌ Revoke Signed Clients</h3>
+    {% if issued_clients %}
+    <ul>
+        {% for client in issued_clients %}
+        <li>{{ client }}
+            <form method="POST" action="/admin/revoke" style="display:inline;">
+                <input type="hidden" name="common_name" value="{{ client }}">
+                <button type="submit">Revoke</button>
+            </form>
+        </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p>No signed clients yet.</p>
+    {% endif %}
+
+    <h3>🛑 Disconnect from VPN</h3>
+    <form method="POST" action="/admin/disconnect">
+        <button type="submit">Disconnect VPN</button>
+        <!-- <button type="submit">Start VPN</button> -->
+    </form>
+    <h3> Start VPN</h3>
+    <form method="POST" action="/admin/start">
+        <!-- <button type="submit">Disconnect VPN</button> -->
+        <button type="submit">Start VPN</button>
+    </form>
+</body>
+
+</html>

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>VPN Client Portal</title>
+</head>
+
+<body>
+  <h2>VPN Client Page</h2>
+  <p>Request certificate, upload cert, or connect to VPN from here.</p>
+
+  <h3>🔐 Request Certificate</h3>
+  <form method="POST" action="/client/request-cert">
+    <label for="common_name">Your Name / Email:</label>
+    <input type="text" name="common_name" required>
+    <button type="submit">Request Certificate</button>
+  </form>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+  <ul>
+    {% for category, message in messages %}
+    <li><strong>{{ category.title() }}:</strong> {{ message }}</li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+  {% endwith %}
+
+  <!-- <h3>📥 Upload Your Certificate</h3>
+  <form method="POST" action="/client/upload-cert" enctype="multipart/form-data">
+    <label>Client Certificate (.crt):</label>
+    <input type="file" name="crt_file" required><br><br>
+    <label>Client Key (.key):</label>
+    <input type="file" name="key_file" required><br><br>
+
+    <input type="text" name="common_name" placeholder="Your username/email" required>
+    <button type="submit">Upload & Authenticate</button>
+  </form> -->
+
+  <h3>🔌 VPN Connection</h3>
+  <form method="POST" action="/client/connect-vpn">
+    <input type="text" name="common_name" placeholder="Your username/email" required>
+    <button type="submit">Connect to VPN</button>
+  </form>
+
+  <form method="GET" action="/client/status">
+    <button type="submit">Check VPN Status</button>
+  </form>
+
+  <!-- <h3>📦 Download Your .ovpn File</h3>
+  <form method="GET" action="/client/generate-ovpn">
+    <input type="text" name="common_name" placeholder="Your username/email" required>
+    <button formaction="/client/generate-ovpn/" formmethod="GET"
+      onclick="this.form.action += this.form.common_name.value;">Download Config</button>
+  </form> -->
+
+  <h3>🛑 Disconnect from VPN</h3>
+  <form method="POST" action="/client/disconnect">
+    <button type="submit">Disconnect VPN</button>
+  </form>
+
+
+
+</body>
+
+</html>
