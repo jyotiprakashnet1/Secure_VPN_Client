@@ -114,14 +114,20 @@ def vpn_status():
 
 from utils.generate_ovpn import generate_ovpn
 
-@client_bp.route('/generate-ovpn/<common_name>', methods=['GET'])
-def client_download_ovpn(common_name):
+@client_bp.route('/generate-ovpn', methods=['GET'])
+def client_generate_ovpn():
+    common_name = request.args.get("common_name")
+    if not common_name:
+        flash("Common name is required", "error")
+        return redirect(url_for("client.client_page"))
     try:
         ovpn_path = generate_ovpn(common_name)
-        return send_file(ovpn_path, as_attachment=True)
+        flash(f"OVPN file successfully generated and saved at: {ovpn_path}", "success")
+        return redirect(url_for("client.client_page"))
     except Exception as e:
         flash(f"Could not generate config: {str(e)}", "error")
         return redirect(url_for("client.client_page"))
+
 
 # @client_bp.route('/disconnect', methods=['POST'])
 # def disconnect_vpn():

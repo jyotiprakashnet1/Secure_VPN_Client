@@ -11,7 +11,7 @@ app.register_blueprint(admin_bp, url_prefix="/admin")
 
 @app.route('/')
 def home():
-    return "Secure VPN UI Project — Go to /client or /admin"
+    return render_template('home.html')
 
 if __name__ == '__main__':
     app.run(debug=True)

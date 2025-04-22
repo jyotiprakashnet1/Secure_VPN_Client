@@ -9,16 +9,6 @@ admin_bp = Blueprint("admin", __name__)
 def admin_page():
     return render_template("admin.html")
 
-def admin_page():
-    issued_dir = "/home/prakash/Documents/Secure_VPN_client/openvpn-ca/pki/issued"
-    try:
-        certs = [f for f in os.listdir(issued_dir) if f.endswith(".crt")]
-        issued_clients = [os.path.splitext(f)[0] for f in certs]
-    except Exception:
-        issued_clients = []
-
-    return render_template("admin.html", issued_clients=issued_clients)
-
 @admin_bp.route('/sign', methods=['POST'])
 def sign_cert():
     common_name = request.form.get('common_name')
@@ -30,61 +20,22 @@ def sign_cert():
         flash(f"Error signing cert: {str(e)}", "error")
     return redirect(url_for('admin.admin_page'))
 
-@admin_bp.route('/clients', methods=['GET'])
-@admin_bp.route('/connected', methods=['GET'])
-def view_connected_clients():
-    status_file = "/run/openvpn/server.status"
-    clients = []
-
-    try:
-        with open(status_file, "r") as f:
-            lines = f.readlines()
-
-        start = False
-        for line in lines:
-            if "Common Name,Real Address" in line:
-                start = True
-                continue
-            if start:
-                if line.strip() == "ROUTING TABLE":
-                    break  # stop after client list
-                parts = line.strip().split(',')
-                if len(parts) >= 2:
-                    clients.append(parts[0])  # Common Name
-
-        flash(f"Connected clients: {', '.join(clients) if clients else 'None'}", "info")
-    except Exception as e:
-        flash(f"Error reading status: {e}", "error")
-
-    return redirect(url_for("admin.admin_page"))
-
 
 @admin_bp.route('/revoke', methods=['POST'])
 def revoke_cert():
     common_name = request.form.get("common_name")
     try:
-        cmd = f"cd /home/prakash/Documents/Secure_VPN_client/openv-ca && ./easyrsa revoke {common_name} && ./easyrsa gen-crl"
+        cmd = f"cd /home/prakash/Documents/Secure_VPN_client/openvpn-ca && ./easyrsa revoke {common_name} && ./easyrsa gen-crl"
         subprocess.run(cmd, shell=True, check=True)
 
         # Move updated CRL to OpenVPN server directory
-        subprocess.run("cp /home/prakash/Documents/Secure_VPN_client/openv-ca/pki/crl.pem /etc/openvpn/server/", shell=True, check=True)
+        subprocess.run("cp /home/prakash/Documents/Secure_VPN_client/openvpn-ca/pki/crl.pem /etc/openvpn/server/", shell=True, check=True)
 
         flash(f"Revoked and CRL updated for {common_name}", "success")
     except subprocess.CalledProcessError as e:
         flash(f"Revocation failed: {str(e)}", "error")
     return redirect(url_for('admin.admin_page'))
 
-# from flask import send_file
-
-
-@admin_bp.route('/generate-ovpn/<common_name>', methods=['GET'])
-def download_ovpn(common_name):
-    try:
-        ovpn_path = generate_ovpn(common_name)
-        return send_file(ovpn_path, as_attachment=True)
-    except Exception as e:
-        flash(f"Failed to generate config: {e}", "error")
-        return redirect(url_for('admin.admin_page'))
 
 @admin_bp.route('/pending', methods=['GET'])
 def view_pending_csrs():
@@ -117,3 +68,62 @@ def start_vpn():
     except subprocess.CalledProcessError as e:
         flash(f"Failed to start: {e}", "error")
     return redirect(url_for('admin.admin_page'))
+
+
+from utils.log_parser import parse_openvpn_status
+
+@admin_bp.route('/tls-sessions', methods=['GET'])
+def view_tls_sessions():
+    sessions = parse_openvpn_status()
+    return render_template("tls_sessions.html", sessions=sessions)
+
+@admin_bp.route('/admin/clients', methods=['GET'])
+def admin_clients():
+    sessions = parse_openvpn_status()
+    return render_template('admin.html', sessions=sessions)
+
+@admin_bp.route("/tls-sessions")
+def tls_sessions():
+    sessions = parse_openvpn_status()
+    return render_template("tls-sessions.html", sessions=sessions)
+
+@admin_bp.route('/issued', methods=['GET'])
+def view_issued_certificates():
+    issued_dir = "/home/prakash/Documents/Secure_VPN_client/openvpn-ca/pki/issued"
+    try:
+        # Get all .crt files in the 'issued' directory (issued certificates)
+        issued_certs = [f for f in os.listdir(issued_dir) if f.endswith(".crt")]
+        # Extract common names (remove the .crt extension)
+        issued_clients = [os.path.splitext(f)[0] for f in issued_certs]
+        
+        return render_template("admin.html", issued_clients=issued_clients)
+    except Exception as e:
+        flash(f"Error reading issued certificates directory: {e}", "error")
+        return redirect(url_for("admin.admin_page"))
+
+@admin_bp.route('/revoked', methods=['GET'])
+def view_revoked_certs():
+    revoked_dir = "/home/prakash/Documents/Secure_VPN_client/openvpn-ca/pki/revoked/certs_by_serial"  # Path where revoked certs are stored
+
+    try:
+        # Get the list of revoked certificates (with .crl extension, or your format)
+        revoked_certs = [f for f in os.listdir(revoked_dir) if f.endswith(".crt")]  # Adjust this based on your CRL extension
+        revoked_clients = [os.path.splitext(f)[0] for f in revoked_certs]  # Strip .crl extension for client names
+        revoked_clients_count = len(revoked_clients)
+
+        # Fetch other data (e.g., connected clients, issued clients count, etc.)
+        # connected_clients = get_connected_clients()  # Your function to fetch connected clients
+        # connected_clients_count = len(connected_clients)
+
+        # Pass data to the template
+        return render_template(
+            "admin.html", 
+            revoked_clients=revoked_clients,  # List of revoked clients
+            revoked_clients_count=revoked_clients_count,  # Count of revoked clients
+            # clients=connected_clients,  # Any other data you want to show
+            # clients_count=connected_clients_count
+        )
+    except Exception as e:
+        flash(f"Error reading revoked certificate directory: {e}", "error")
+        return redirect(url_for("admin.admin_page"))
+

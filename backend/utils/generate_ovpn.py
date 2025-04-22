@@ -2,9 +2,29 @@ import os
 
 def generate_ovpn(common_name):
     base_dir = "/home/prakash/Documents/Secure_VPN_client/openvpn"
-    client_dir = f"{base_dir}/client"
-    server_dir = f"{base_dir}/server"
-    
+    client_dir = os.path.join(base_dir, "client")
+    server_dir = os.path.join(base_dir, "server")
+
+    # Paths to required files
+    ca_cert_path = os.path.join(server_dir, "ca.crt")
+    ta_key_path = os.path.join(server_dir, "ta.key")
+    client_cert_path = os.path.join(client_dir, f"{common_name}.crt")
+    client_key_path = os.path.join(client_dir, f"{common_name}.key")
+
+    # Read content from certificate and key files
+    with open(ca_cert_path, "r") as f:
+        ca_cert = f.read().strip()
+
+    with open(client_cert_path, "r") as f:
+        client_cert = f.read().strip()
+
+    with open(client_key_path, "r") as f:
+        client_key = f.read().strip()
+
+    with open(ta_key_path, "r") as f:
+        ta_key = f.read().strip()
+
+    # Compose .ovpn content
     ovpn_content = f"""
 client
 dev tun
@@ -15,28 +35,31 @@ nobind
 persist-key
 persist-tun
 remote-cert-tls server
-cipher AES-256-CBC
+cipher AES-256-GCM
 auth SHA256
 verb 3
+key-direction 1
 
 <ca>
-{open(f"{server_dir}/ca.crt").read()}
+{ca_cert}
 </ca>
 
 <cert>
-{open(f"{client_dir}/{common_name}.crt").read()}
+{client_cert}
 </cert>
 
 <key>
-{open(f"{client_dir}/{common_name}.key").read()}
+{client_key}
 </key>
 
 <tls-auth>
-{open(f"{server_dir}/ta.key").read()}
+{ta_key}
 </tls-auth>
-key-direction 1
 """
-    output_path = f"{client_dir}/{common_name}.ovpn"
+
+    # Write to .ovpn file in client folder
+    output_path = os.path.join(client_dir, f"{common_name}.ovpn")
     with open(output_path, "w") as f:
         f.write(ovpn_content.strip())
+
     return output_path
