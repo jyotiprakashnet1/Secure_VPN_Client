@@ -6,7 +6,7 @@ def generate_ovpn(common_name):
     server_dir = os.path.join(base_dir, "server")
 
     # Paths to required files
-    ca_cert_path = os.path.join(server_dir, "ca.crt")
+    ca_cert_path = os.path.join(client_dir, "ca.crt")
     ta_key_path = os.path.join(server_dir, "ta.key")
     client_cert_path = os.path.join(client_dir, f"{common_name}.crt")
     client_key_path = os.path.join(client_dir, f"{common_name}.key")
