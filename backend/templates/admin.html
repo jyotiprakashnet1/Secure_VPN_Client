@@ -171,7 +171,9 @@
         <!-- Revoke Signed Clients -->
         <div class="mb-4">
             <h4>📛 Revoke Signed Clients</h4>
-        
+            <form method="GET" action="/admin/revoked">
+                <button class="btn btn-warning mb-2" type="submit">Refresh</button>
+            </form>
             {% if revoked_clients %}
             <ul class="list-group">
                 {% for client in revoked_clients %}
@@ -208,7 +210,10 @@
 
             </div>
         </div>
-
+        <div class="mb-5 text-center">
+            <a href="{{ url_for('admin.snort_alerts') }}" class="btn btn-warning">View Snort Alerts</a>  
+        </div>
+    </div>
 
     </div>
 

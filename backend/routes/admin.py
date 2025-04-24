@@ -127,3 +127,11 @@ def view_revoked_certs():
         flash(f"Error reading revoked certificate directory: {e}", "error")
         return redirect(url_for("admin.admin_page"))
 
+#snort route for log
+from utils.snort_log_parser import read_snort_alerts
+
+@admin_bp.route("/snort-alerts")
+def snort_alerts():
+    alerts = read_snort_alerts()
+    return render_template("admin_alerts.html", alerts=alerts)
+

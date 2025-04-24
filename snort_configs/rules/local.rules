@@ -1,0 +1,4 @@
+# local.rules
+
+alert icmp any any -> 10.8.0.0 any (msg:"ICMP Packet Detected"; sid:1000001;)
+alert tcp any any -> any any (msg:"TCP Traffic Detected"; sid:1000002;)
