@@ -2,14 +2,15 @@ import os
 
 def generate_ovpn(common_name):
     base_dir = "/home/prakash/Documents/Secure_VPN_client/openvpn"
+    ca_dir = "/home/prakash/Documents/Secure_VPN_client/openvpn-ca/client"
     client_dir = os.path.join(base_dir, "client")
     server_dir = os.path.join(base_dir, "server")
 
     # Paths to required files
     ca_cert_path = os.path.join(client_dir, "ca.crt")
     ta_key_path = os.path.join(server_dir, "ta.key")
-    client_cert_path = os.path.join(client_dir, f"{common_name}.crt")
-    client_key_path = os.path.join(client_dir, f"{common_name}.key")
+    client_cert_path = os.path.join("/home/prakash/Documents/Secure_VPN_client/openvpn-ca/pki/issued", f"{common_name}.crt")
+    client_key_path = os.path.join("/home/prakash/Documents/Secure_VPN_client/openvpn-ca/pki/private", f"{common_name}.key")
 
     # Read content from certificate and key files
     with open(ca_cert_path, "r") as f:

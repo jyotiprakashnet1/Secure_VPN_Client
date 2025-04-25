@@ -25,7 +25,7 @@ def sign_cert():
 def revoke_cert():
     common_name = request.form.get("common_name")
     try:
-        cmd = f"cd /home/prakash/Documents/Secure_VPN_client/openvpn-ca && ./easyrsa revoke {common_name} && ./easyrsa gen-crl"
+        cmd = f"cd /home/prakash/Documents/Secure_VPN_client/openvpn-ca && echo yes | ./easyrsa revoke {common_name} && ./easyrsa gen-crl"
         subprocess.run(cmd, shell=True, check=True)
 
         # Move updated CRL to OpenVPN server directory
